@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, ListGroup, Form } from "react-bootstrap";
 import { ResetButton } from "./uiComponent";
 import axios from "axios";
@@ -14,17 +14,29 @@ type Props = {
 };
 
 const TodoList: React.FC<Props> = ({ todoItems }) => {
+  const [todo, setTodo] = useState<Array<TodoItem>>([]);
+
   useEffect(() => {
+    setTodo(todoItems);
     const token = document.querySelector(
       "[name=csrf-token]"
     ) as HTMLMetaElement;
     axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content;
-  }, []);
+  }, [setTodo]);
 
   const checkBoxOnCheck = (
     e: React.ChangeEvent<HTMLInputElement>,
     todoItemId: number
   ): void => {
+    setTodo([...todo].map(object => {
+      if (object.id === todoItemId) {
+        return {
+          ...object,
+          checked: e.target.checked,
+        }
+      }
+      else return object;
+    }))
     axios.post("/todo", {
       id: todoItemId,
       checked: e.target.checked,
@@ -39,7 +51,7 @@ const TodoList: React.FC<Props> = ({ todoItems }) => {
     <Container>
       <h3>2022 Wish List</h3>
       <ListGroup>
-        {todoItems.map((todo) => (
+        {todo.map((todo) => (
           <ListGroup.Item key={todo.id}>
             <Form.Check
               type="checkbox"
